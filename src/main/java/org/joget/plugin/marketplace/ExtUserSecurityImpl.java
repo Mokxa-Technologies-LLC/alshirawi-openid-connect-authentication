@@ -1,6 +1,7 @@
 package org.joget.plugin.marketplace;
 
 import java.util.Map;
+
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.ResourceBundleUtil;
 import org.joget.directory.model.service.DirectoryManagerProxyImpl;
@@ -10,27 +11,30 @@ import org.joget.plugin.base.PluginManager;
 import org.joget.plugin.directory.SecureDirectoryManagerImpl;
 import org.joget.plugin.directory.UserSecurityImpl;
 
+/**
+ * @editor akash.johnthadeus
+ */
 public class ExtUserSecurityImpl extends UserSecurityImpl implements HiddenPlugin {
 
     public ExtUserSecurityImpl() {
         super();
     }
-    
+
     @Override
     public String getName() {
-        return "OpenID Connect User Security";
+        return "Al Shirawi OpenID Connect User Security";
     }
 
     @Override
     public String getDescription() {
-        return "User Security for OpenID Connect";
+        return "User Security for Al Shirawi OpenID Connect";
     }
 
     @Override
     public String getVersion() {
         return Activator.VERSION;
     }
-    
+
     @Override
     public String getLabel() {
         return "OpenID Connect User Security";
@@ -46,23 +50,23 @@ public class ExtUserSecurityImpl extends UserSecurityImpl implements HiddenPlugi
 
         // original footer
         String content = "";
-        
+
         if ("true".equals(getPropertyString("enableForgotPassword"))) {
-            content += "<a rel=\"popup\" style=\"cursor:pointer;text-decoration:underline;\" onclick=\"forgotPassword();return false;\">"+ResourceBundleUtil.getMessage("app.edm.label.forgotPassword")+"</a>\n";
+            content += "<a rel=\"popup\" style=\"cursor:pointer;text-decoration:underline;\" onclick=\"forgotPassword();return false;\">" + ResourceBundleUtil.getMessage("app.edm.label.forgotPassword") + "</a>\n";
 
             String contextPath = AppUtil.getRequestContextPath();
-            content += "<script>function forgotPassword(){new PopupDialog('" + contextPath + "/web/json/plugin/"+UserSecurityImpl.class.getName()+"/service?a=fp', ' ').init();}</script>";
+            content += "<script>function forgotPassword(){new PopupDialog('" + contextPath + "/web/json/plugin/" + UserSecurityImpl.class.getName() + "/service?a=fp', ' ').init();}</script>";
 
             String token = getForgotPasswordToken();
             if (token != null) {
-                content += "<script>$(document).ready(function(){new PopupDialog('" + contextPath + "/web/json/plugin/"+UserSecurityImpl.class.getName()+"/service?a=fpcp&t="+token+"', ' ').init();});</script>";
+                content += "<script>$(document).ready(function(){new PopupDialog('" + contextPath + "/web/json/plugin/" + UserSecurityImpl.class.getName() + "/service?a=fpcp&t=" + token + "', ' ').init();});</script>";
             }
         }
 
         for (UserSecurity us : getSubUserSecurityImpls()) {
             content += us.getLoginFormFooter();
         }
-        String redirectUrl = OpenIDDirectoryManager.getCallbackURL()+"?login=1";
+        String redirectUrl = OpenIDDirectoryManager.getCallbackURL() + "?login=1";
         // append login button
         content += "<style>\n"
                 + "#openIDLogin {\n"
@@ -80,6 +84,17 @@ public class ExtUserSecurityImpl extends UserSecurityImpl implements HiddenPlugi
                 + "}\n"
                 + "</style>";
         content += "<a href=\"" + redirectUrl + "\" id=\"openIDLogin\"><i id=\"icon\" class=\"" + dmImpl.getPropertyString("buttonIcon") + "\"></i>" + dmImpl.getPropertyString("buttonText") + "</a>";
+
+        //SSO multi user error
+        content += "<script>" +
+                "$(document).ready(function() {" +
+                "  const params = new URLSearchParams(window.location.search);" +
+                "  const loginError = params.get('login_error');" +
+                "  if (loginError === 'multi') {" +
+                "    $('#main-body-message').html('Multiple accounts are linked to this email address');" +
+                "  }" +
+                "});" +
+                "</script>";
 
         return content;
     }

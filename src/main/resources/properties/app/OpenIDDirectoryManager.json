@@ -146,18 +146,6 @@
                 "description": "By default, openid, Sample: openid profile email"
             },
             {
-                "name": "userProvisioning",
-                "label": "@@properties.user.provision@@",
-                "type": "checkbox",
-                "value": "true",
-                "options": [
-                    {
-                        "value": "true",
-                        "label": ""
-                    }
-                ]
-            },
-            {
                 "name": "saveAccessToken",
                 "label": "@@properties.user.save.access.token@@",
                 "type": "checkbox",
@@ -169,6 +157,18 @@
                     }
                 ],
                 "description": "Include offline_access in scope for saving refresh token into user meta"
+            },
+            {
+                "name" : "debugMode",
+                "label" : "@@properties.openid.debugMode@@",
+                "description" : "@@properties.openid.debugMode.desc@@",
+                "type" : "checkbox",
+                "options" : [
+                    {
+                        "value" : "true",
+                        "label" : ""
+                    }
+                ]
             }
         ]
     },

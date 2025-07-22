@@ -18,10 +18,7 @@ import org.joget.directory.dao.UserDao;
 import org.joget.directory.ext.DirectoryManagerAuthenticatorImpl;
 import org.joget.directory.model.Role;
 import org.joget.directory.model.User;
-import org.joget.directory.model.service.DirectoryManager;
-import org.joget.directory.model.service.DirectoryManagerAuthenticator;
-import org.joget.directory.model.service.DirectoryManagerProxyImpl;
-import org.joget.directory.model.service.UserSecurityFactory;
+import org.joget.directory.model.service.*;
 import org.joget.plugin.base.PluginManager;
 import org.joget.plugin.directory.SecureDirectoryManager;
 import org.joget.plugin.directory.SecureDirectoryManagerImpl;
@@ -72,6 +69,7 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -80,6 +78,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.net.URI;
 import java.net.URLDecoder;
+
 import net.minidev.json.JSONObject;
 import net.sf.ehcache.Cache;
 import org.joget.directory.dao.UserMetaDataDao;
@@ -87,8 +86,11 @@ import org.joget.directory.model.UserMetaData;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
+/**
+ * @editor akash.johnthadeus
+ */
 public class OpenIDDirectoryManager extends SecureDirectoryManager {
-    
+
     public static final String DEFAULT_USER_META_ACCESS_TOKEN_KEY = "oidcAccessToken";
     public static final String DEFAULT_USER_META_REFRESH_TOKEN_KEY = "oidcRefreshToken";
 
@@ -96,12 +98,12 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
 
     @Override
     public String getName() {
-        return "OpenID Connect Directory Manager";
+        return "Al Shirawi OpenID Connect Directory Manager";
     }
 
     @Override
     public String getDescription() {
-        return "Directory Manager with support for OpenID Connect";
+        return "Directory Manager with support for Al Shirawi OpenID Connect";
     }
 
     @Override
@@ -184,9 +186,9 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
 
                 Cache cache = (Cache) AppUtil.getApplicationContext().getBean("nonceCache");
                 cache.put(element);
-                
+
                 String redirect = request.getParameter("redirect");
-                if(redirect != null && redirect.trim().length() > 0){
+                if (redirect != null && redirect.trim().length() > 0) {
                     request.getSession().setAttribute("oidcRedirect", request.getParameter("redirect"));
                 }
 
@@ -194,14 +196,14 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
                 URI authorizationEndpoint = getAuthorizationEndpointUri(nonce, state);
                 // Create the user agent and make the call to the auth endpoint
                 response.sendRedirect(authorizationEndpoint.toString());
-                
+
             } else if (request.getParameter("code") != null) {
                 //receive response from identity provider
                 AuthenticationResponse authResp = null;
                 AuthorizationCode authCode = null;
                 authResp = AuthenticationResponseParser.parse(new URI(request.getRequestURI() + "?" + request.getQueryString()));
                 Nonce nonce = null;
-                        
+
                 State state = new State(request.getParameter("state"));
                 Cache cache = (Cache) AppUtil.getApplicationContext().getBean("nonceCache");
                 net.sf.ehcache.Element element = cache.get(state.toString());
@@ -229,11 +231,11 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
                 if (authCode != null) {
                     String code = URLDecoder.decode(authCode.getValue(), "UTF-8");
                     Object[] accessTokenArray = getTokenForCode(code, nonce);
-                    
+
                     OIDCTokens oidcTokens = (OIDCTokens) accessTokenArray[0];
                     AccessToken accessToken = oidcTokens.getAccessToken();
                     RefreshToken refreshToken = oidcTokens.getRefreshToken();
-                    
+
                     ClaimsSet idTokenClaims = (ClaimsSet) accessTokenArray[1];
                     UserInfo userInfo = getUserInfo(accessToken);
                     userInfo.putAll(idTokenClaims);
@@ -339,12 +341,12 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
         } else {
             UserInfoEndpoint = new URI(dmImpl.getPropertyString("userinfoEndpoint"));
         }
-       // HTTPResponse httpResponse = new UserInfoRequest(UserInfoEndpoint, (BearerAccessToken) accessTokenContent).toHTTPRequest().send();
+        // HTTPResponse httpResponse = new UserInfoRequest(UserInfoEndpoint, (BearerAccessToken) accessTokenContent).toHTTPRequest().send();
 
         HTTPRequest httpRequest = new UserInfoRequest(UserInfoEndpoint, (BearerAccessToken) accessTokenContent).toHTTPRequest();
         httpRequest.setAccept("application/json");
         HTTPResponse httpResponse = httpRequest.send();
- 
+
         // Parse the response
         UserInfoResponse userInfoResponse = null;
         try {
@@ -352,7 +354,7 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
 
             if (jsonResponse.containsKey("id")) {
                 String idValue = jsonResponse.getAsString("id");
-                jsonResponse.put("sub", idValue); 
+                jsonResponse.put("sub", idValue);
                 UserInfo userInfo = new UserInfo(jsonResponse);
                 return userInfo;
             } else {
@@ -369,10 +371,10 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
             }
         } catch (ParseException ex) {
             LogUtil.error(OpenIDDirectoryManager.class.getName(), ex, "Failed to parse userInfo Response");
-            
+
             return null;
         }
-       return null;
+        return null;
     }
 
     /**
@@ -443,7 +445,7 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
         if (issuerUrl.contains("auth0")) {
             // Append a slash to the issuer URL if it contains "auth0"
             issuerUrl = issuerUrl.endsWith("/") ? issuerUrl : issuerUrl + "/";
-        } else if (issuerUrl.endsWith("/")){
+        } else if (issuerUrl.endsWith("/")) {
             // else remove ending slash
             issuerUrl = issuerUrl.substring(0, issuerUrl.length() - 1);
         }
@@ -468,27 +470,34 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
             LogUtil.error(OpenIDDirectoryManager.class.getName(), e, "Invalid Claims");
             return null;
         }
-        return new Object[]{successResponse.getOIDCTokens(), idTokenInfo} ;
+        return new Object[]{successResponse.getOIDCTokens(), idTokenInfo};
     }
-
 
 
     void doLogin(UserInfo userInfo, HttpServletRequest request, HttpServletResponse response, AccessToken accessToken, RefreshToken refreshToken) throws IOException {
         try {
             UserMetaDataDao userMetaDataDao = (UserMetaDataDao) AppUtil.getApplicationContext().getBean("userMetaDataDao");
-            
+
             // read from properties
             DirectoryManagerProxyImpl dm = (DirectoryManagerProxyImpl) AppUtil.getApplicationContext().getBean("directoryManager");
             SecureDirectoryManagerImpl dmImpl = (SecureDirectoryManagerImpl) dm.getDirectoryManagerImpl();
 
+            Boolean debug = Boolean.parseBoolean(dmImpl.getPropertyString("debugMode"));
+
+            if (debug) {
+                LogUtil.info(getClassName() + " : userInfo : ", userInfo.toJSONObject().toString());
+                LogUtil.info(getClassName() + " : accessToken : ", String.valueOf(accessToken));
+            }
+
             //String certificate = dmImpl.getPropertyString("certificate");
-            boolean userProvisioningEnabled = Boolean.parseBoolean(dmImpl.getPropertyString("userProvisioning"));
+//            boolean userProvisioningEnabled = Boolean.parseBoolean(dmImpl.getPropertyString("userProvisioning"));
+            boolean userProvisioningEnabled = false;
 
             // get custom user info from user
             String username = "";
             String firstName = "";
             String lastName = "";
-            if (dmImpl.getPropertyString("userinfoAttr").equals("userinfoAttrCustom")){
+            if (dmImpl.getPropertyString("userinfoAttr").equals("userinfoAttrCustom")) {
                 username = userInfo.getClaim(dmImpl.getPropertyString("userinfoAttrUsernameField")).toString();
                 firstName = userInfo.getClaim(dmImpl.getPropertyString("userinfoAttrFirstNameField")).toString();
                 lastName = userInfo.getClaim(dmImpl.getPropertyString("userinfoAttrLastNameField")).toString();
@@ -501,7 +510,8 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
             }
 
             // get user
-            User user = dmImpl.getUserByUsername(username);
+//            User user = dmImpl.getUserByUsername(username);
+            User user = getUserByEmail(username, debug);
             if (user == null && userProvisioningEnabled) {
                 // user does not exist, provision
                 user = new User();
@@ -513,19 +523,19 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
                     user.setEmail(userInfo.getEmailAddress());
                 }
 
-                if (dmImpl.getPropertyString("userinfoAttr").equals("userinfoAttrCustom")){
+                if (dmImpl.getPropertyString("userinfoAttr").equals("userinfoAttrCustom")) {
                     user.setFirstName(firstName);
                     user.setLastName(lastName);
                 } else {
                     if (userInfo.getGivenName() != null && !userInfo.getGivenName().isEmpty()) {
                         user.setFirstName(userInfo.getGivenName());
                     }
-    
+
                     if (userInfo.getFamilyName() != null && !userInfo.getFamilyName().isEmpty()) {
                         user.setLastName(userInfo.getFamilyName());
                     }
                 }
-              
+
 
                 if (userInfo.getLocale() != null && !userInfo.getLocale().isEmpty()) {
                     user.setLocale(userInfo.getLocale());
@@ -546,6 +556,13 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
                 response.sendRedirect(request.getContextPath() + "/web/login?login_error=1");
                 return;
             }
+
+            if ("EMAIL_MULTIPLE_USERS".equals(user.getId())) {
+                response.sendRedirect(request.getContextPath() + "/web/login?login_error=multi");
+                return;
+            }
+
+            username = user.getUsername();
 
             // verify license
             PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
@@ -569,42 +586,47 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
             UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(username, "", gaList);
             result.setDetails(details);
             SecurityContextHolder.getContext().setAuthentication(result);
-            
+
             // save tokens to user meta
-            if("true".equals(dmImpl.getPropertyString("saveAccessToken"))){
-                if(accessToken != null){
+            if ("true".equals(dmImpl.getPropertyString("saveAccessToken"))) {
+                if (accessToken != null) {
                     UserMetaData umd = userMetaDataDao.getUserMetaData(username, DEFAULT_USER_META_ACCESS_TOKEN_KEY);
-                    if(umd == null){
+                    if (umd == null) {
                         umd = new UserMetaData();
                         umd.setUsername(username);
                         umd.setKey(DEFAULT_USER_META_ACCESS_TOKEN_KEY);
                         umd.setValue(accessToken.getValue());
                         userMetaDataDao.addUserMetaData(umd);
-                    }else{
+                    } else {
                         umd.setValue(accessToken.getValue());
                         userMetaDataDao.updateUserMetaData(umd);
                     }
                 }
 
-                if(refreshToken != null){
+                if (refreshToken != null) {
                     UserMetaData umd = userMetaDataDao.getUserMetaData(username, DEFAULT_USER_META_REFRESH_TOKEN_KEY);
-                    if(umd == null){
+                    if (umd == null) {
                         umd = new UserMetaData();
                         umd.setUsername(username);
                         umd.setKey(DEFAULT_USER_META_REFRESH_TOKEN_KEY);
                         umd.setValue(refreshToken.getValue());
                         userMetaDataDao.addUserMetaData(umd);
-                    }else{
+                    } else {
                         umd.setValue(refreshToken.getValue());
                         userMetaDataDao.updateUserMetaData(umd);
                     }
                 }
             }
-            
-            
+
+            String ip = "";
+            if (request != null) {
+                ip = AppUtil.getClientIp(request);
+            }
+
             // add audit trail
+            LogUtil.info(getClass().getName(), "Authentication for user " + username + " (" + ip + ") : " + true);
             WorkflowHelper workflowHelper = (WorkflowHelper) AppUtil.getApplicationContext().getBean("workflowHelper");
-            workflowHelper.addAuditTrail(this.getClass().getName(), "authenticate", "Authentication for user " + username + ": " + true);
+            workflowHelper.addAuditTrail(this.getClass().getName(), "authenticate", "Authentication for user " + username + "(" + ip + "): " + true);
 
             // redirect
             String relayState = request.getParameter("RelayState");
@@ -612,11 +634,11 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
                 response.sendRedirect(relayState);
             } else {
                 Object redirect = request.getSession().getAttribute("oidcRedirect");
-                
-                if(redirect != null){
+
+                if (redirect != null) {
                     String redirectUrl = (String) redirect;
                     response.sendRedirect(redirectUrl);
-                }else{
+                } else {
                     SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
                     String savedUrl = "";
                     if (savedRequest != null) {
@@ -633,5 +655,31 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
             String url = request.getContextPath() + "/web/login?login_error=1";
             response.sendRedirect(url);
         }
+    }
+
+    private User getUserByEmail(String email, Boolean debug) {
+        ExtDirectoryManager directoryManager = (ExtDirectoryManager) AppUtil.getApplicationContext().getBean("directoryManager");
+        Collection<User> userList = directoryManager.getUsers(email, null, null, null, null, null, null, "firstName", false, null, null);
+
+        if (userList == null || userList.isEmpty()) {
+            if (debug)
+                LogUtil.warn(getClassName(), "No account is linked to this email address : " + email);
+            return null; // No users found
+        }
+        if (userList.size() == 1) {
+            // Exactly one user found
+            User singleUser = userList.iterator().next();
+            if (debug)
+                LogUtil.info(getClassName(), singleUser.getUsername() + " : account is linked to this email address : " + email);
+            return singleUser;
+        } else {
+            // More than one user found
+            User multiUser = new User();
+            multiUser.setId("EMAIL_MULTIPLE_USERS");
+            if (debug)
+                LogUtil.info(getClassName(), "Multiple accounts are linked to this email address : " + email);
+            return multiUser;
+        }
+
     }
 }
