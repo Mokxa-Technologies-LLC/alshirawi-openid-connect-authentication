@@ -91,7 +91,7 @@ public class ExtUserSecurityImpl extends UserSecurityImpl implements HiddenPlugi
                 "  const params = new URLSearchParams(window.location.search);" +
                 "  const loginError = params.get('login_error');" +
                 "  if (loginError === 'multi') {" +
-                "    $('#main-body-message').html('Multiple accounts are linked to this email address');" +
+                "    $('#main-body-message').html('Multiple accounts are linked to this email address. Please contact IT team for further support');" +
                 "  }" +
                 "});" +
                 "</script>";

@@ -553,11 +553,13 @@ public class OpenIDDirectoryManager extends SecureDirectoryManager {
                 UserDao userDao = (UserDao) AppUtil.getApplicationContext().getBean("userDao");
                 userDao.addUser(user);
             } else if (user == null && !userProvisioningEnabled) {
+                request.getSession().setAttribute("SPRING_SECURITY_LAST_EXCEPTION", new Exception("Required information is missing. Please contact IT team for further support"));
                 response.sendRedirect(request.getContextPath() + "/web/login?login_error=1");
                 return;
             }
 
             if ("EMAIL_MULTIPLE_USERS".equals(user.getId())) {
+                request.getSession().setAttribute("SPRING_SECURITY_LAST_EXCEPTION", new Exception("Multiple accounts are linked to this email address. Please contact IT team for further support"));
                 response.sendRedirect(request.getContextPath() + "/web/login?login_error=multi");
                 return;
             }
